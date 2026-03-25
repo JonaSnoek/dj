@@ -102,10 +102,26 @@ function DjDashboard({ user, updateUser }) {
         else setDeckB(track);
     };
 
-    // When a song ends: clear the deck (do NOT auto-play next)
-    const onDeckEnded = (deck) => {
-        if (deck === 'A') setDeckA(null);
-        else setDeckB(null);
+    // When a song ends: auto-play next track from queue
+    const onDeckEnded = (finishedDeck) => {
+        // Find the first track in queue that actually has an audio file
+        const nextIndex = queue.findIndex(t => t.file_path);
+
+        if (nextIndex !== -1) {
+            const nextTrack = queue[nextIndex];
+            const newQueue = queue.filter((_, idx) => idx !== nextIndex);
+            updateQueueServer(newQueue);
+            loadToDeck(nextTrack, finishedDeck);
+
+            setTimeout(() => {
+                const ref = finishedDeck === 'A' ? audioRefA : audioRefB;
+                if (ref.current) ref.current.play();
+            }, 300);
+        } else {
+            // No playable tracks left in queue
+            if (finishedDeck === 'A') setDeckA(null);
+            else setDeckB(null);
+        }
     };
 
     // Accept a request: mark as accepted and add to queue
