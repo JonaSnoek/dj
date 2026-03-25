@@ -1,0 +1,161 @@
+:root {
+  --bg: #05070a;
+  --surface: #10141d;
+  --surface-alt: #1a1f2e;
+  --primary: #00f2ff;
+  --secondary: #ff007a;
+  --accent: #bc13fe;
+  --text: #f0f6fc;
+  --text-dim: #8b949e;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --error: #ff4d4d;
+  --success: #2ea043;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background Animation */
+body::before {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 20%),
+              radial-gradient(circle, var(--primary) 0%, transparent 20%);
+  background-size: 50% 50%;
+  background-position: 0 0, 50% 50%;
+  opacity: 0.05;
+  z-index: -1;
+  animation: bg-move 20s linear infinite;
+}
+
+@keyframes bg-move {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Glassmorphism */
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #000;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 20px rgba(255, 0, 122, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+}
+
+.btn-outline:hover {
+  background: var(--glass);
+  border-color: var(--primary);
+}
+
+input, select {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+}
+
+h1, h2, h3 {
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.flex { display: flex; }
+.gap-1 { gap: 1rem; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+
+/* Deck UI */
+.deck-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.player {
+  padding: 1.5rem;
+  background: linear-gradient(145deg, var(--surface), var(--bg));
+  border: 2px solid var(--glass-border);
+  border-radius: 20px;
+  text-align: center;
+}
+
+.player.active-deck-a { border-color: var(--primary); box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
+.player.active-deck-b { border-color: var(--secondary); box-shadow: 0 0 30px rgba(255, 0, 122, 0.1); }
+
+/* Animations */
+.fade-in { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
