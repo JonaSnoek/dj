@@ -101,6 +101,31 @@ const pool = {
             return [{}];
         }
 
+        // Admin: list all users
+        if (sql.includes('SELECT id, username, roles FROM users')) {
+            return [data.users.map(u => ({ id: u.id, username: u.username, roles: u.roles }))];
+        }
+        // Admin: update user (with password)
+        if (sql.includes('UPDATE users SET username = ?, roles = ?, password = ?')) {
+            const user = data.users.find(u => u.id == params[3]);
+            if (user) { user.username = params[0]; user.roles = params[1]; user.password = params[2]; }
+            await saveData(data);
+            return [{}];
+        }
+        // Admin: update user (without password)
+        if (sql.includes('UPDATE users SET username = ?, roles = ? WHERE id = ?')) {
+            const user = data.users.find(u => u.id == params[2]);
+            if (user) { user.username = params[0]; user.roles = params[1]; }
+            await saveData(data);
+            return [{}];
+        }
+        // Admin: delete user
+        if (sql.includes('DELETE FROM users WHERE id = ?')) {
+            data.users = data.users.filter(u => u.id != params[0]);
+            await saveData(data);
+            return [{}];
+        }
+
         return [[]];
     },
     getConnection: async () => ({

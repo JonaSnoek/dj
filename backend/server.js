@@ -178,6 +178,61 @@ app.patch('/api/requests/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// ── Admin: User Management ──────────────────────────────────────────────────
+const adminOnly = (req, res, next) => {
+    if (!req.user?.roles?.includes('Admin')) return res.status(403).json({ message: 'Admin only' });
+    next();
+};
+
+// List all users
+app.get('/api/admin/users', authMiddleware, adminOnly, async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT id, username, roles FROM users');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Create user
+app.post('/api/admin/users', authMiddleware, adminOnly, async (req, res) => {
+    const { username, password, roles } = req.body;
+    if (!username || !password) return res.status(400).json({ message: 'Username and password required' });
+    try {
+        const hashed = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (username, password, roles) VALUES (?, ?, ?)', [username, hashed, roles || 'DJ']);
+        res.status(201).json({ message: 'User created' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Edit user (username, roles, optional new password)
+app.patch('/api/admin/users/:id', authMiddleware, adminOnly, async (req, res) => {
+    const { username, roles, password } = req.body;
+    try {
+        if (password) {
+            const hashed = await bcrypt.hash(password, 10);
+            await pool.query('UPDATE users SET username = ?, roles = ?, password = ? WHERE id = ?', [username, roles, hashed, req.params.id]);
+        } else {
+            await pool.query('UPDATE users SET username = ?, roles = ? WHERE id = ?', [username, roles, req.params.id]);
+        }
+        res.json({ message: 'User updated' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Delete user
+app.delete('/api/admin/users/:id', authMiddleware, adminOnly, async (req, res) => {
+    try {
+        await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
+        res.json({ message: 'User deleted' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Socket logic
 io.on('connection', (socket) => {
     socket.on('join-dj-room', (djId) => {
