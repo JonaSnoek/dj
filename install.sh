@@ -32,10 +32,10 @@ APP_DIR="/opt/dj"
 echo ""
 echo "[3/7] Cloning / updating app in $APP_DIR ..."
 
-if [ -d "$APP_DIR/.git" ]; then
-  echo "Repository already exists – pulling latest changes..."
-  git -C "$APP_DIR" pull
+if [ -d "$APP_DIR/backend" ]; then
+  echo "Lokaler Code gefunden in $APP_DIR – überspringe GitHub Download."
 else
+  echo "Lade Code von GitHub herunter..."
   git clone https://github.com/JonaSnoek/dj.git "$APP_DIR"
 fi
 
@@ -52,12 +52,32 @@ npm install --omit=dev
 # Create .env if it doesn't exist
 if [ ! -f "$APP_DIR/backend/.env" ]; then
   cp "$APP_DIR/backend/.env.example" "$APP_DIR/backend/.env"
-  # Generate a random JWT secret
   JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(48).toString('hex'))")
   sed -i "s/change_this_to_a_long_random_string/$JWT_SECRET/" "$APP_DIR/backend/.env"
+  
+  # Configure local MySQL for the app
+  sed -i "s/DB_USER=.*/DB_USER=dj_admin/" "$APP_DIR/backend/.env"
+  sed -i "s/DB_PASS=.*/DB_PASS=dj_password/" "$APP_DIR/backend/.env"
+  
   echo "  ✅ .env created with a random JWT secret."
-  echo "  ⚠️  Review $APP_DIR/backend/.env before going to production."
 fi
+
+# --- 3.5. Database setup ---
+echo ""
+echo "[4.5/7] Installing and configuring MySQL Database..."
+apt-get install -y mysql-server
+systemctl start mysql
+systemctl enable mysql
+
+# Create DB and User
+mysql -e "CREATE DATABASE IF NOT EXISTS dj_manager;"
+mysql -e "CREATE USER IF NOT EXISTS 'dj_admin'@'localhost' IDENTIFIED BY 'dj_password';"
+mysql -e "GRANT ALL PRIVILEGES ON dj_manager.* TO 'dj_admin'@'localhost';"
+mysql -e "FLUSH PRIVILEGES;"
+
+# Run the database initialization script
+echo "Initializing database tables..."
+node init_db.js || echo "⚠️ init_db.js failed, possibly already initialized or missing."
 
 # --- 4. Frontend build ---
 echo ""
@@ -80,6 +100,7 @@ cat > "$NGINX_CONF" <<NGINX
 server {
     listen 80;
     server_name ${DOMAIN:-_};
+    client_max_body_size 50M;
 
     # Frontend (built static files)
     root $APP_DIR/frontend/dist;
