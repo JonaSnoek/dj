@@ -35,8 +35,7 @@ bash /opt/dj/update.sh
 ```
 
 ## Default Admin Login
-- **Username**: `admin`
-- **Password**: `mpipwmkbe3521!`
+
 
 > ⚠️ Change the admin password after first login!
 
